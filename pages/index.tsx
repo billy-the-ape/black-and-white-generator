@@ -15,7 +15,7 @@ const Home: NextPage = () => {
   const onFileChange: InputHTMLAttributes<HTMLInputElement>['onChange'] = ({ target }) => {
     if(target.files && target.files.length) {
       
-      setFiles(files.concat(Array.from(target.files)));
+      setFiles(Array.from(target.files).concat(files));
     }
   }
 
