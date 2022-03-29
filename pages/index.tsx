@@ -24,8 +24,8 @@ const Home: NextPage = () => {
         <Typography sx={{mt:5, mb:3}} variant="h3">Doodle Coloring Book</Typography>
         <input multiple type="file" id="myFile" name="filename" accept="image/png, image/gif, image/jpeg" onChange={onFileChange} />
         <Box mt={3} />
-        {files.map((file) => (
-          <ColorlessCanvas file={file} />
+        {files.map((file, i) => (
+          <ColorlessCanvas key={i} file={file} />
         ))}
       </Box>
     </Container>
