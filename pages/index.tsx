@@ -20,7 +20,7 @@ const Home: NextPage = () => {
             canvas.current.width = img.width;
             canvas.current.height = img.height;
             const ctx = canvas.current.getContext("2d");
-            ctx!.drawImage(img, 0, 0);
+            ctx?.drawImage(img, 0, 0);
 
             const imageData = ctx!.getImageData(0, 0, img.width, img.height);      
             const newData = imageData.data.map((num) => num && 255);
@@ -29,7 +29,8 @@ const Home: NextPage = () => {
             canvas2.current.height = img.height;
             const ctx2 = canvas2.current.getContext("2d");
             
-            ctx2!.putImageData(new ImageData(newData, img.width, img.height), 0, 0)
+            ctx2?.putImageData(new ImageData(newData, img.width, img.height), 0, 0);
+            ctx2?.scale(.5, .5);
           }
         };
       }
