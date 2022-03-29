@@ -13,9 +13,10 @@ const StyledCanvas = styled('canvas')(({theme: {breakpoints}}) => ({
 type ColorlessCanvasProps = {
   file: File;
   onRemove: () => void;
+  invert?: boolean;
 }
 
-const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => {
+const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, invert, onRemove }) => {
   const canvas = useRef<HTMLCanvasElement>(null);
   const canvas2 = useRef<HTMLCanvasElement>(null);
 
@@ -38,11 +39,14 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
               // Only keep black, turn rest to white
               const newData = new Uint8ClampedArray(data.length);
 
+              const fg = invert ? 255 : 0;
+              const bg = invert ? 0 : 255;
+
               for (let i = 0; i <= data.length - 4; i += 4) {
-                if ((data[i] + data[i + 1] + data[i + 2]) <= 255) {
-                  newData[i] = newData[i+1] = newData[i+2] = 0;
+                if ((data[i] + data[i + 1] + data[i + 2]) <= 240) {
+                  newData[i] = newData[i+1] = newData[i+2] = fg;
                 } else {
-                  newData[i] = newData[i+1] = newData[i+2] = 255;
+                  newData[i] = newData[i+1] = newData[i+2] = bg;
                 }
                 newData[i+3] = data[i+3];
               }
@@ -58,7 +62,7 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
           }
         };
       }
-  }, [file]);
+  }, [file, invert]);
 
   const downloadImage = () => {
     const link = document.createElement('a');
