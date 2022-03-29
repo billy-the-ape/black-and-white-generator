@@ -1,11 +1,14 @@
-import { Box, Paper } from "@mui/material";
+import { Box, IconButton, Paper } from "@mui/material";
 import { useEffect, useRef } from "react";
+import DownloadIcon from '@mui/icons-material/Download';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 type ColorlessCanvasProps = {
   file: File;
+  onRemove: () => void;
 }
 
-const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file }) => {
+const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => {
   const canvas = useRef<HTMLCanvasElement>(null);
   const canvas2 = useRef<HTMLCanvasElement>(null);
 
@@ -40,10 +43,21 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file }) => {
           }
         };
       }
-  }, [file])
+  }, [file]);
+
+  const downloadImage = () => {
+    const link = document.createElement('a');
+    link.download = `Color me - ${file.name}`;
+    link.href = canvas2.current!.toDataURL()
+    link.click();
+  };
 
   return (
-    <Paper sx={{mb: 2, px: 6, py: 4}}>
+    <Paper sx={{mb: 2, px: 6, py: 4, display: 'flex', flexDirection: 'column'}}>
+      <Box display="flex" justifyContent="flex-end" mb={1}>
+        <IconButton onClick={downloadImage}><DownloadIcon /></IconButton>
+        <IconButton sx={{ml: 1}} onClick={onRemove}><HighlightOffIcon /></IconButton>
+      </Box>
       <canvas ref={canvas} style={{display: 'none'}} />
       <canvas ref={canvas2} style={{ maxWidth: '50vw' }} />
     </Paper>

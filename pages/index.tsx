@@ -1,15 +1,28 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { Box, Container, Divider, Typography } from '@mui/material';
+import { Box, Button, Container, Typography } from '@mui/material';
 import { InputHTMLAttributes, useState } from 'react';
 import ColorlessCanvas from '../components/ColorlessCanvas';
 
+
+export const removeItemAtIndex = <T extends unknown>(
+  arr: T[],
+  index: number
+): T[] => [...arr.slice(0, index), ...arr.slice(index + 1, arr.length)];
+
 const Home: NextPage = () => {
+  const [fileLabel, setFileLabel] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const onFileChange: InputHTMLAttributes<HTMLInputElement>['onChange'] = ({ target }) => {
     if(target.files && target.files.length) {
-      setFiles(Array.from(target.files));
+      
+      setFiles(files.concat(Array.from(target.files)));
+      setFileLabel(target.files.length > 1 ? `${files.length} files selected` : target.files[0].name)
     }
+  }
+
+  const onFileRemove = (index: number) => {
+    setFiles(removeItemAtIndex(files, index));
   }
 
 
@@ -21,11 +34,14 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Box display="flex" flexDirection="column" alignItems="center">
-        <Typography sx={{mt:5, mb:3}} variant="h3">Doodle Coloring Book</Typography>
-        <input multiple type="file" id="myFile" name="filename" accept="image/png, image/gif, image/jpeg" onChange={onFileChange} />
-        <Box mt={3} />
+        <Typography sx={{ mt:5, mb:3 }} variant="h3">Doodle Coloring Book</Typography>
+        <Button variant="contained" sx={{ mb: 3 }} component="label">
+          Choose files
+          <input multiple type="file" id="myFile" hidden name="filename" accept="image/png, image/gif, image/jpeg" onChange={onFileChange} />
+        </Button>
+        <Typography>{fileLabel}</Typography>
         {files.map((file, i) => (
-          <ColorlessCanvas key={i} file={file} />
+          <ColorlessCanvas key={file.name} file={file} onRemove={() => onFileRemove(i)} />
         ))}
       </Box>
     </Container>
