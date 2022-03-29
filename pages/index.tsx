@@ -37,12 +37,12 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Box display="flex" flexDirection="column" alignItems="center">
-        <Typography sx={{ mt:5, mb:3 }} variant="h3">Doodle Coloring Book</Typography>
-        <Button variant="contained" sx={{ mb: 3 }} component="label">
+        <Typography sx={{ mt:5, mb:3 }} variant="h4">Doodle Coloring Book</Typography>
+        <Button variant="contained" sx={{ mb: 1 }} component="label">
           Choose file(s)
           <input multiple type="file" id="myFile" hidden name="filename" accept="image/png, image/gif, image/jpeg" onChange={onFileChange} />
         </Button>
-        <Typography>{fileLabel}</Typography>
+        <Typography sx={{mb: 2 }}>{fileLabel}</Typography>
         {files.map((file, i) => (
           <ColorlessCanvas key={file.name} file={file} onRemove={() => onFileRemove(i)} />
         ))}

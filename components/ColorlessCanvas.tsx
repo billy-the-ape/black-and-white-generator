@@ -1,7 +1,14 @@
-import { Box, IconButton, Paper } from "@mui/material";
+import { Box, IconButton, Paper, styled } from "@mui/material";
 import { useEffect, useRef } from "react";
 import DownloadIcon from '@mui/icons-material/Download';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+
+const StyledCanvas = styled('canvas')(({theme: {breakpoints}}) => ({
+  maxWidth: '50vw',
+  [breakpoints.down('sm')]: {
+    maxWidth: '70vw',
+  }
+}))
 
 type ColorlessCanvasProps = {
   file: File;
@@ -53,13 +60,13 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
   };
 
   return (
-    <Paper sx={{mb: 2, px: 6, py: 4, display: 'flex', flexDirection: 'column'}}>
+    <Paper sx={{mb: 2, px: 6, pb: 4, pt:1, display: 'flex', flexDirection: 'column'}}>
       <Box display="flex" justifyContent="flex-end" mb={1}>
         <IconButton onClick={downloadImage}><DownloadIcon /></IconButton>
         <IconButton sx={{ml: 1}} onClick={onRemove}><HighlightOffIcon /></IconButton>
       </Box>
       <canvas ref={canvas} style={{display: 'none'}} />
-      <canvas ref={canvas2} style={{ maxWidth: '50vw' }} />
+      <StyledCanvas ref={canvas2} />
     </Paper>
   )
 }
