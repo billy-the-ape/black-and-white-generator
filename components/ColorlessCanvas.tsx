@@ -33,10 +33,19 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
             if(ctx) {
               ctx.drawImage(img, 0, 0);
 
-              const imageData = ctx.getImageData(0, 0, img.width, img.height);
+              const { data } = ctx.getImageData(0, 0, img.width, img.height);
 
               // Only keep black, turn rest to white
-              const newData = imageData.data.map((num) => num && 255);
+              const newData = new Uint8ClampedArray(data.length);
+
+              for (let i = 0; i <= data.length - 4; i += 4) {
+                if ((data[i] + data[i + 1] + data[i + 2]) <= 255) {
+                  newData[i] = newData[i+1] = newData[i+2] = 0;
+                } else {
+                  newData[i] = newData[i+1] = newData[i+2] = 255;
+                }
+                newData[i+3] = data[i+3];
+              }
 
               canvas2.current.width = img.width;
               canvas2.current.height = img.height;
@@ -44,7 +53,6 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
 
               if(ctx2) {
                 ctx2.putImageData(new ImageData(newData, img.width, img.height), 0, 0);
-                ctx2.scale(.3, .3);
               }
             }
           }
