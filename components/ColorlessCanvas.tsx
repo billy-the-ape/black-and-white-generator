@@ -98,7 +98,7 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
           <Slider
             defaultValue={threshold}
             min={10}
-            max={700}
+            max={500}
             onChange={(_, value) => setThreshold(Number(value))}
           />
         </Box>
