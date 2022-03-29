@@ -1,7 +1,7 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { Box, Button, Container, Typography } from '@mui/material';
-import { InputHTMLAttributes, useState } from 'react';
+import { InputHTMLAttributes, useMemo, useState } from 'react';
 import ColorlessCanvas from '../components/ColorlessCanvas';
 
 
@@ -11,19 +11,22 @@ export const removeItemAtIndex = <T extends unknown>(
 ): T[] => [...arr.slice(0, index), ...arr.slice(index + 1, arr.length)];
 
 const Home: NextPage = () => {
-  const [fileLabel, setFileLabel] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const onFileChange: InputHTMLAttributes<HTMLInputElement>['onChange'] = ({ target }) => {
     if(target.files && target.files.length) {
       
       setFiles(files.concat(Array.from(target.files)));
-      setFileLabel(target.files.length > 1 ? `${files.length} files selected` : target.files[0].name)
     }
   }
 
   const onFileRemove = (index: number) => {
     setFiles(removeItemAtIndex(files, index));
   }
+
+  const fileLabel = useMemo(() => 
+    files.length > 1 ? `${files.length} files selected` : files[0]?.name ?? '',
+    [files]
+  )
 
 
   return (
@@ -36,7 +39,7 @@ const Home: NextPage = () => {
       <Box display="flex" flexDirection="column" alignItems="center">
         <Typography sx={{ mt:5, mb:3 }} variant="h3">Doodle Coloring Book</Typography>
         <Button variant="contained" sx={{ mb: 3 }} component="label">
-          Choose files
+          Choose file(s)
           <input multiple type="file" id="myFile" hidden name="filename" accept="image/png, image/gif, image/jpeg" onChange={onFileChange} />
         </Button>
         <Typography>{fileLabel}</Typography>
