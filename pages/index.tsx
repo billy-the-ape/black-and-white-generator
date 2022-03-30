@@ -3,9 +3,6 @@ import Head from 'next/head'
 import { Box, Button, Container, IconButton, Typography } from '@mui/material';
 import { InputHTMLAttributes, useState } from 'react';
 import ColorlessCanvas from '../components/ColorlessCanvas';
-import { RgbaColor } from "react-colorful";
-import ColorPicker from '../components/ColorPicker';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 export const removeItemAtIndex = <T extends unknown>(
   arr: T[],

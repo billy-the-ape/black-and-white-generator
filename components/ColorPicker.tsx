@@ -1,45 +1,90 @@
-import { Box, BoxProps, Button, Tooltip } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, BoxProps, Button, debounce, styled, Tooltip } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { RgbaColorPicker, RgbaColor } from "react-colorful";
 
+const BackgroundBox = styled(Box)(({theme: { palette, spacing }}) => ({
+  top: -5,
+  left: -5,
+  position: "absolute",
+  zIndex: 1,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: 'center',
+  backgroundColor: palette.background.default,
+  padding: spacing(1),
+  borderRadius: spacing(1), 
+}));
+
+const RAINBOW_ASSET_URL = '/assets/rainbow-gradient.png';
+
 type ColorPickerProps = {
-  color: RgbaColor;
+  color?: RgbaColor | null;
+  initialColor?: RgbaColor | null;
+  image?: string | null;
   label: string;
-  onChange?: (newColor: RgbaColor) => void;
-  onSelect?: (newColor: RgbaColor) => void;
-  sx?: BoxProps['sx']
+  onChange?: (newColor: RgbaColor | string) => void;
+  onSelect?: (newColor: RgbaColor | string) => void;
+  sx?: BoxProps['sx'];
 }
 const noop = () => {};
 
 const ColorPicker: React.FC<ColorPickerProps> = ({
   color,
   label,
+  image,
   sx = {},
   onChange = noop,
   onSelect = noop,
 }) => {
-  const [colorState, setColorState] = useState<RgbaColor>(color);
+  const [colorState, setColorState] = useState<RgbaColor>(color!);
+  const [selectedImage, setSelectedImage] = useState(image);
   const [showPicker, setShowPicker] = useState(false);
 
-  useEffect(() => { setColorState(color) }, [color.r, color.g, color.b, color.a])
+  const debounceColorChange = useCallback(debounce((color: RgbaColor) => onChange(color), 300), [onChange]);
 
-  const handleChange = (newColor: RgbaColor) => {
-    setColorState(newColor);
-    onChange(newColor);
-  }
+  useEffect(() => {
+    setSelectedImage(image);
+    if(color) setColorState(color);
+  }, [color?.a, color?.b, color?.g, color?.r, image])
+
+  const handleChange = (newColor: RgbaColor) => debounceColorChange(newColor);
   
-  const handleSelect = () => {
+  const handleSelectColor = () => {
     setShowPicker(false);
+    onChange(colorState);
     onSelect(colorState);
+  }
+
+  const handleSelectRainbow = () => {
+    setShowPicker(false);
+    setSelectedImage(RAINBOW_ASSET_URL);
+    onChange(RAINBOW_ASSET_URL);
+    onSelect(RAINBOW_ASSET_URL);
   }
 
   return (
     <Box position="relative">
       {showPicker && (
-        <Box top={-5} left={-5} position="absolute" zIndex={1} display="flex" flexDirection="column">
-          <RgbaColorPicker color={color} onChange={handleChange} />
-          <Button sx={{ mt: 1 }} variant="contained" color="info" onClick={handleSelect}>Select {label}</Button>
-        </Box>
+        <BackgroundBox>
+          <RgbaColorPicker color={colorState} onChange={handleChange} />
+          <Box display="flex" flexDirection="column" px={3} mt={1}>
+            <Button
+              sx={{ flex: 1, backgroundImage: `url(${RAINBOW_ASSET_URL})` }}
+              onClick={handleSelectRainbow}
+              variant="contained"
+            >
+              Rainbow
+            </Button>
+            <Button
+              sx={{ flex: 1, mt: 1 }}
+              variant="contained"
+              color="info"
+              onClick={handleSelectColor}
+            >
+              Select color
+            </Button>
+          </Box>
+        </BackgroundBox>
       )}
       <Tooltip title={`Select ${label} Color`}>
         <Box px={2} sx={{
@@ -47,7 +92,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           width: 55,
           cursor: 'pointer',
           ...sx,
-          backgroundColor: `rgba(${colorState.r},${colorState.g},${colorState.b},${colorState.a})`
+          backgroundColor: selectedImage ? undefined : `rgba(${colorState.r},${colorState.g},${colorState.b},${colorState.a})`,
+          ... (selectedImage ? { backgroundImage: `url(${selectedImage})`, backgroundSize: 'cover' } : {})
         }} onClick={() => setShowPicker(true)} />
       </Tooltip>
     </Box>
