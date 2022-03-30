@@ -1,11 +1,13 @@
-import { Box, IconButton, Paper, Slider, styled, Typography } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { Box, debounce, IconButton, Paper, Slider, styled, Typography } from "@mui/material";
+import { useCallback, useEffect, useRef, useState } from "react";
 import DownloadIcon from '@mui/icons-material/Download';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { RgbaColor } from "react-colorful";
 import ColorPicker from "./ColorPicker";
 import { loadImageFromFile, loadImagesIntoCanvas } from "./util/loadImage";
+
+const DEFAULT_THRESHOLD = 200;
 
 const StyledCanvas = styled('canvas')(({theme: {breakpoints}}) => ({
   maxWidth: '50vw',
@@ -30,7 +32,7 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
   const [fgColor, setFgColor] = useState<RgbaColor | null>({ r: 0, b: 0, g: 0, a: 1 });
   const [fgImageUrl, setFgImageUrl] = useState<string | null>(null);
   const [bgImageUrl, setBgImageUrl] = useState<string | null>(null);
-  const [threshold, setThreshold] = useState(200);
+  const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
 
   const swapColors = () => {
     setFgImageUrl(bgImageUrl);
@@ -64,6 +66,8 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
     bgColor,
     fgColor,
   ]);
+
+  const debounceThreshold = useCallback(debounce((value: number) => setThreshold(value), 200), [setThreshold]);
 
   const downloadImage = () => {
     const link = document.createElement('a');
@@ -103,10 +107,10 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({ file, onRemove }) => 
         <Box>
           <Typography variant="body1">Color Threshold</Typography>
           <Slider
-            value={threshold}
+            defaultValue={DEFAULT_THRESHOLD}
             min={10}
-            max={500}
-            onChange={(_, value) => setThreshold(Number(value))}
+            max={700}
+            onChange={(_, value) => debounceThreshold(Number(value))}
           />
         </Box>
         <Box display="flex" justifyContent="flex-end" flexBasis={150}>
