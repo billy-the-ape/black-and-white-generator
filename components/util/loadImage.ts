@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { RgbaColor } from "react-colorful";
 
 export const loadImage = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
@@ -62,7 +61,7 @@ export const loadImagesIntoCanvas = async ({
       fgCanvas.height = fgImage.height;
       fgCanvas.width = fgImage.width;
       const fgCtx = fgCanvas.getContext("2d");
-      const fgScale = img.width / fgImage.width;
+      const fgScale = (img.width / fgImage.width) * 2;
       const fgWidth = img.width;
       const fgHeight = fgImage.height * fgScale;
       fgCanvas.width = fgWidth;
@@ -77,7 +76,7 @@ export const loadImagesIntoCanvas = async ({
     if (bgImageUrl) {
       const bgImage = await loadImage(bgImageUrl);
       const bgCtx = bgCanvas.getContext("2d");
-      const bgScale = img.width / bgImage.width;
+      const bgScale = (img.width / bgImage.width) * 2;
       const bgWidth = img.width;
       const bgHeight = bgImage.height * bgScale;
       bgCanvas.width = bgWidth;
