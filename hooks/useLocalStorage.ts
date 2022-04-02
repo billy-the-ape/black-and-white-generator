@@ -1,4 +1,4 @@
-import { JSONValue } from "@/types";
+import { JSONValue } from "../types";
 import { useEffect, useState } from "react";
 
 const getLocalStorageValue = <T extends JSONValue | null>(
