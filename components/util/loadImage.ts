@@ -1,25 +1,28 @@
 import { RgbaColor } from "react-colorful";
 
-export const loadImage = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
-  const img = new Image();
+export const loadImage = (url: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
     img.src = url;
     img.onload = () => resolve(img);
     img.onerror = () => reject(img);
-});
+  });
 
-export const loadImageFromFile = (file: File) => new Promise<HTMLImageElement>((resolve, reject) => {
-  const fr = new FileReader();
-  fr.readAsDataURL(file)
-  fr.onload = () => {
-    const img = new Image();
+export const loadImageFromFile = (file: File) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const fr = new FileReader();
+    fr.readAsDataURL(file);
+    fr.onload = () => {
+      const img = new Image();
       img.src = String(fr.result);
       img.onload = () => resolve(img);
       img.onerror = () => reject(img);
-  };
-});
+    };
+  });
 
 type LoadImagesIntoCanvasProps = {
-  file: File;
+  file?: File;
+  image?: HTMLImageElement;
   hiddenCanvas: HTMLCanvasElement;
   visibleCanvas: HTMLCanvasElement;
   threshold: number;
@@ -29,10 +32,11 @@ type LoadImagesIntoCanvasProps = {
   bgColor: RgbaColor | null;
   fgImageUrl: string | null;
   bgImageUrl: string | null;
-}
+};
 
 export const loadImagesIntoCanvas = async ({
   file,
+  image,
   hiddenCanvas,
   visibleCanvas,
   fgCanvas,
@@ -43,11 +47,14 @@ export const loadImagesIntoCanvas = async ({
   fgColor,
   bgColor,
 }: LoadImagesIntoCanvasProps) => {
-  const img = await loadImageFromFile(file);
+  if (!image && !file) {
+    console.error("Image or file required");
+  }
+  const img = image ?? (await loadImageFromFile(file!));
   hiddenCanvas.height = img.height;
   hiddenCanvas.width = img.width;
   const hiddenCtx = hiddenCanvas.getContext("2d");
-  if(hiddenCtx) {
+  if (hiddenCtx) {
     hiddenCtx.drawImage(img, 0, 0);
     const { data } = hiddenCtx.getImageData(0, 0, img.width, img.height);
 
@@ -89,16 +96,16 @@ export const loadImagesIntoCanvas = async ({
     }
 
     for (let i = 0; i <= data.length - 4; i += 4) {
-      if ((data[i] + data[i + 1] + data[i + 2]) <= threshold) {
+      if (data[i] + data[i + 1] + data[i + 2] <= threshold) {
         newData[i] = fgColor?.r ?? fgImageData[i];
         newData[i + 1] = fgColor?.g ?? fgImageData[i + 1];
         newData[i + 2] = fgColor?.b ?? fgImageData[i + 2];
-        newData[i + 3] = ((fgColor?.a ?? 0) * 255)  || fgImageData[i + 3];
+        newData[i + 3] = (fgColor?.a ?? 0) * 255 || fgImageData[i + 3];
       } else {
         newData[i] = bgColor?.r ?? bgImageData[i];
         newData[i + 1] = bgColor?.g ?? bgImageData[i + 1];
         newData[i + 2] = bgColor?.b ?? bgImageData[i + 2];
-        newData[i + 3] = ((bgColor?.a ?? 0) * 255)  || bgImageData[i + 3];
+        newData[i + 3] = (bgColor?.a ?? 0) * 255 || bgImageData[i + 3];
       }
     }
 
@@ -106,8 +113,12 @@ export const loadImagesIntoCanvas = async ({
     visibleCanvas.height = img.height;
     const visibleCtx = visibleCanvas.getContext("2d");
 
-    if(visibleCtx) {
-      visibleCtx.putImageData(new ImageData(newData, img.width, img.height), 0, 0);
+    if (visibleCtx) {
+      visibleCtx.putImageData(
+        new ImageData(newData, img.width, img.height),
+        0,
+        0
+      );
     }
   }
-}
+};
