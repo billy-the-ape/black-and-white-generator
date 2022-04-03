@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import { Box, Button, Container, IconButton, Typography } from "@mui/material";
+import { Box, Button, Container, Typography } from "@mui/material";
 import { InputHTMLAttributes, useState } from "react";
 import ColorlessCanvas from "../components/ColorlessCanvas";
 import CollectionTokenSelector from "../components/CollectionTokenSelector";
@@ -37,13 +37,13 @@ const Home: NextPage = () => {
   return (
     <Container>
       <Head>
-        <title>Doodle Coloring Book</title>
-        <meta name="description" content="Make your doodle colorable" />
+        <title>NFT Coloring Book</title>
+        <meta name="description" content="Make your NFT colorable" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Box display="flex" flexDirection="column" alignItems="center">
         <Typography sx={{ mt: 5, mb: 3 }} variant="h4">
-          Doodle Coloring Book
+          NFT Coloring Book
         </Typography>
         <Box display="flex" alignItems="center" mb={2}>
           <Button variant="contained" component="label">

@@ -1,10 +1,12 @@
 import { Autocomplete, Box, Button, TextField } from "@mui/material";
 import { FormEventHandler, useState } from "react";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { parseQuery, updateQueryParam } from "./util/parseQuery";
 
-type CollectionItem = { label: string; value: string };
+type CollectionItem = { label?: string; value: string; icon?: string };
 
 const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const IPFS_REGEX = /^ipfs:\/\/(.*)/;
 
 const DEFAULT_TOKENS: CollectionItem[] = [
   {
@@ -25,6 +27,8 @@ const DEFAULT_TOKENS: CollectionItem[] = [
   },
 ];
 
+const INITIAL_VALUES = parseQuery();
+
 type CollectionTokenSelectorProps = {
   onSelectionLoaded: (img: HTMLImageElement) => void;
 };
@@ -42,6 +46,10 @@ const CollectionTokenSelector: React.FC<CollectionTokenSelectorProps> = ({
   const [storeCollectionName, setStoreCollectionName] = useState(false);
   const [collectionError, setCollectionError] = useState(false);
   const [tokenError, setTokenError] = useState(false);
+  const [addressError, setAddressError] = useState(false);
+  const [address, setAddress] = useState(INITIAL_VALUES.wallet ?? "");
+  const [tokenIds, setTokenIds] = useState<CollectionItem[]>([]);
+  const [loadingTokens, setLoadingTokens] = useState(false);
 
   const fetchTokenImage: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
@@ -56,11 +64,19 @@ const CollectionTokenSelector: React.FC<CollectionTokenSelectorProps> = ({
       return;
     }
 
-    const { name, image_url, asset_contract } = await fetch(
+    const { name, image_original_url, image_url, asset_contract } = await fetch(
       `https://api.opensea.io/api/v1/asset/${selectedCollection.value}/${selectedTokenId}/?include_orders=false`
     ).then((r) => r.json());
 
-    const file = await fetch(image_url)
+    let url = image_original_url ?? image_url;
+
+    const ipfsMatch = IPFS_REGEX.exec(url);
+
+    if (ipfsMatch) {
+      url = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+    }
+
+    const file = await fetch(url)
       .then((res) => res.blob())
       .then((blob) => window.URL.createObjectURL(blob));
 
@@ -71,7 +87,6 @@ const CollectionTokenSelector: React.FC<CollectionTokenSelectorProps> = ({
 
     img.onload = () => {
       onSelectionLoaded(img);
-      console.log({ img });
     };
 
     if (storeCollectionName) {
@@ -90,16 +105,89 @@ const CollectionTokenSelector: React.FC<CollectionTokenSelectorProps> = ({
     }
   };
 
+  const fetchUserTokens = async (walletAddress: string) => {
+    setAddress(walletAddress);
+    if (!ETH_ADDRESS_REGEX.test(walletAddress)) {
+      setAddressError(true);
+      return;
+    }
+    updateQueryParam("wallet", walletAddress);
+    setAddressError(false);
+    const result = await fetch(
+      `https://api.opensea.io/api/v1/collections?asset_owner=${walletAddress}&offset=0&limit=300`
+    )
+      .then((r) => r.json())
+      .then(
+        (r) =>
+          r
+            .reduce(
+              (
+                acc: CollectionItem[],
+                { primary_asset_contracts, name, hidden }: any
+              ) => {
+                if (primary_asset_contracts.length && !hidden)
+                  acc.push({
+                    label: name,
+                    value: primary_asset_contracts[0].address,
+                  });
+                return acc;
+              },
+              []
+            )
+            .sort((a: CollectionItem, b: CollectionItem) =>
+              a.label!.localeCompare(b.label!)
+            ) as CollectionItem[]
+      );
+    setSavedCollections(result);
+  };
+
+  const fetchWalletAssets = async (tokenAddress: string) => {
+    if (
+      !ETH_ADDRESS_REGEX.test(tokenAddress) ||
+      !ETH_ADDRESS_REGEX.test(address)
+    ) {
+      return;
+    }
+    setLoadingTokens(true);
+    setSelectedTokenId("");
+    const result = await fetch(
+      `https://api.opensea.io/api/v1/assets?owner=${address}&asset_contract_address=${tokenAddress}&include_orders=false`
+    )
+      .then((r) => r.json())
+      .then(
+        (r: { assets: { token_id: string }[] }) =>
+          r?.assets
+            ?.map(
+              ({ token_id, image_thumbnail_url }: any = {}) =>
+                ({
+                  value: token_id,
+                  icon: image_thumbnail_url,
+                } as CollectionItem)
+            )
+            .sort((a, b) => Number(a.value) - Number(b.value)) ?? []
+      );
+
+    setTokenIds(result);
+    setLoadingTokens(false);
+  };
+
   return (
     <form onSubmit={fetchTokenImage}>
-      <Box display="flex" mb={2}>
+      <TextField
+        label="Wallet"
+        value={address}
+        onChange={({ target }) => fetchUserTokens(target.value)}
+        error={addressError}
+        sx={{ width: "100%", mb: 2 }}
+      />
+      <Box display="flex" mb={3}>
         <Autocomplete
           freeSolo
           autoSelect
           options={savedCollections}
           sx={{ width: 300, mr: 2 }}
-          onChange={(_, newValue) => {
-            console.log({ newValue });
+          value={selectedCollection}
+          onChange={async (_, newValue) => {
             if (newValue === selectedCollection?.label) return;
             if (typeof newValue === "string") {
               if (!ETH_ADDRESS_REGEX.test(newValue)) {
@@ -110,17 +198,38 @@ const CollectionTokenSelector: React.FC<CollectionTokenSelectorProps> = ({
               setStoreCollectionName(true);
             } else {
               setSelectedCollection(newValue);
+              if (newValue) {
+                await fetchWalletAssets(newValue.value);
+              }
             }
           }}
           renderInput={(params) => (
             <TextField {...params} error={collectionError} label="Collection" />
           )}
         />
-        <TextField
-          error={tokenError}
-          sx={{ width: 150, mr: 2 }}
-          label="Token ID"
-          onChange={({ target }) => setSelectedTokenId(target.value)}
+        <Autocomplete
+          freeSolo
+          autoSelect
+          options={loadingTokens ? [] : tokenIds}
+          sx={{ width: 100, mr: 2 }}
+          loading={loadingTokens}
+          value={selectedTokenId}
+          onChange={(_, val) =>
+            setSelectedTokenId(typeof val === "string" ? val : val?.value ?? "")
+          }
+          renderInput={(params) => (
+            <TextField {...params} error={tokenError} label="Token ID" />
+          )}
+          renderOption={(props, option) => (
+            <Box
+              component="li"
+              sx={{ "& > img": { mr: 2, flexShrink: 0 } }}
+              {...props}
+            >
+              <img loading="lazy" width="30" src={option.icon} alt="" />
+              {option.value}
+            </Box>
+          )}
         />
         <Button type="submit">Select</Button>
       </Box>
