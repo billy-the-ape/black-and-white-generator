@@ -100,7 +100,7 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({
   }, [file, threshold, fgImageUrl, bgImageUrl, bgColor, fgColor]);
 
   const debounceThreshold = useCallback(
-    debounce((value: number) => setThreshold(value), 200),
+    (value: number) => setThreshold(value),
     [setThreshold]
   );
 
