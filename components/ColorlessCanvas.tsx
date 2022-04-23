@@ -166,7 +166,7 @@ const ColorlessCanvas: React.FC<ColorlessCanvasProps> = ({
           <Slider
             defaultValue={DEFAULT_THRESHOLD}
             min={10}
-            max={700}
+            max={900}
             onChange={(_, value) => debounceThreshold(Number(value))}
           />
         </Box>
